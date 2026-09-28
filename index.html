@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>ごろんタロット ～祈緒里の町～</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#11142a">
+<style>
+:root{color-scheme:dark;--bg:#111216;--panel:#1b1d23;--text:#f3efe7;--muted:#aaa69e;--line:#363944}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;background:radial-gradient(circle at 50% 0,#272a35 0,#111216 48%);color:var(--text);min-height:100svh}
+main{max-width:520px;margin:auto;padding:28px 18px 50px;text-align:center}h1{font-size:28px;margin:10px 0 4px}.sub{color:var(--muted);margin:0 0 22px}.panel{background:rgba(27,29,35,.9);border:1px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 14px 45px #0006}.row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}button{appearance:none;border:1px solid #484c59;background:#252832;color:var(--text);border-radius:16px;padding:14px 17px;font-size:16px;font-weight:700}button.primary{background:#f1ece2;color:#15161a;border-color:#f1ece2;min-width:180px}button:active{transform:scale(.98)}input{width:100%;padding:14px 15px;border-radius:14px;border:1px solid #454955;background:#121319;color:var(--text);font-size:16px}.card{min-height:250px;border:1px solid #555966;border-radius:20px;margin:18px auto;padding:24px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#252833,#17191f);max-width:280px}.card .num{font-size:13px;color:var(--muted);letter-spacing:.12em}.card .name{font-family:Georgia,serif;font-size:27px;margin:13px 0 8px}.card .dir{font-size:16px;color:#d8d3c9}.hiddenCard .name,.hiddenCard .dir,.hiddenCard .num{visibility:hidden}.hiddenCard:after{content:"✦\A  IORI  \A✦";white-space:pre;font-family:Georgia,serif;font-size:24px;line-height:1.7;color:#d9d3c7}.spread{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mini{min-height:145px;padding:10px 5px;margin:0;border-radius:14px}.mini .name{font-size:15px}.mini .dir{font-size:12px}.mini .num{font-size:10px}.status{min-height:26px;color:#c8c3b9;margin:8px}.footer{font-size:12px;color:#777b84;margin-top:22px}
+
+.hero{display:flex;align-items:center;gap:14px;text-align:left;margin:6px 0 18px}.hero img{width:86px;height:86px;border-radius:24px;object-fit:cover;box-shadow:0 8px 28px #0008;border:1px solid #a88954}.hero h1{margin:0;font-size:26px}.hero .sub{margin:4px 0 0;line-height:1.55}.panel{border-color:#5d4c78;background:linear-gradient(180deg,rgba(24,27,52,.94),rgba(17,18,32,.94))}button.primary{background:linear-gradient(135deg,#7460b9,#b38ad8);color:white;border-color:#c5a9ef;box-shadow:0 6px 24px #6d4cac55}.card{border-color:#8e78ad;background:radial-gradient(circle at 50% 15%,#2e315c,#151625 70%);box-shadow:inset 0 0 0 1px #d3b46b33}.hiddenCard:after{color:#e7d28f}.footer{color:#8f8a9e}
+</style>
+</head><body><main>
+<div class="hero"><img src="icon.png" alt="黒猫とタロットのアイコン"><div><h1>ごろんタロット 🔮</h1><p class="sub">～祈緒里の町～<br>寝転がったまま、ここ！で止める。</p></div></div>
+<div class="panel"><input id="question" placeholder="聞きたいこと（空欄でもOK）" /></div>
+<div class="panel">
+<div class="row"><button onclick="setMode(1)">1枚</button><button onclick="setMode(3)">3枚</button><button onclick="setMode(5)">5枚</button></div>
+<div id="status" class="status">1枚引き</div>
+<div id="single" class="card hiddenCard"><div class="num"></div><div class="name"></div><div class="dir"></div></div>
+<div id="spread" class="spread" style="display:none"></div>
+<div class="row"><button id="start" class="primary" onclick="toggleShuffle()">シャッフル開始</button><button onclick="resetAll()">最初から</button></div>
+</div>
+<p class="footer">カードはランダムに選ばれます。未来の確定ではなく、問いを眺めるための道具としてどうぞ。🌿</p>
+</main>
+<script>
+const majors=['愚者','魔術師','女教皇','女帝','皇帝','教皇','恋人','戦車','力','隠者','運命の輪','正義','吊るされた男','死神','節制','悪魔','塔','星','月','太陽','審判','世界'];
+const suits=['ワンド','カップ','ソード','ペンタクル']; const ranks=['エース','2','3','4','5','6','7','8','9','10','ペイジ','ナイト','クイーン','キング'];
+const cards=[...majors.map((n,i)=>({n:`${i}. ${n}`,id:i})),...suits.flatMap((s,si)=>ranks.map((r,ri)=>({n:`${s} ${r}`,id:22+si*14+ri})))];
+let mode=1,timer=null,current=null,drawn=[];
+const $=id=>document.getElementById(id);
+function setMode(n){mode=n;resetAll();$('status').textContent=`${n}枚引き`;}
+function pick(){const available=cards.filter(c=>!drawn.some(d=>d.id===c.id)); const c=available[Math.floor(Math.random()*available.length)]; return {...c,rev:Math.random()<.5};}
+function showPreview(c){$('single').classList.remove('hiddenCard');$('single').querySelector('.num').textContent=`ARCANA ${String(c.id+1).padStart(2,'0')}`;$('single').querySelector('.name').textContent=c.n;$('single').querySelector('.dir').textContent=c.rev?'逆位置':'正位置';}
+function toggleShuffle(){ if(timer){stopShuffle();return;} drawn=[];$('spread').innerHTML='';$('spread').style.display='none';$('single').style.display='flex';$('start').textContent='ここ！ STOP';$('status').textContent='シャッフル中……好きな瞬間に止めて 👀'; timer=setInterval(()=>{current=pick();showPreview(current)},75);}
+function stopShuffle(){clearInterval(timer);timer=null;$('start').textContent='シャッフル開始'; if(mode===1){drawn=[current];$('status').textContent='出たカード ✨';return;} drawn=[]; while(drawn.length<mode){const c=pick();drawn.push(c);} $('single').style.display='none';$('spread').style.display='grid';$('spread').innerHTML=drawn.map((c,i)=>`<div class="card mini"><div class="num">${i+1}</div><div class="name">${c.n}</div><div class="dir">${c.rev?'逆位置':'正位置'}</div></div>`).join('');$('status').textContent=`${mode}枚展開 ✨`;}
+function resetAll(){if(timer){clearInterval(timer);timer=null}drawn=[];current=null;$('start').textContent='シャッフル開始';$('single').style.display='flex';$('single').classList.add('hiddenCard');$('single').querySelectorAll('div').forEach(x=>x.textContent='');$('spread').style.display='none';$('spread').innerHTML='';$('status').textContent=`${mode}枚引き`;}
+
+if ('serviceWorker' in navigator) { window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+</script></body></html>
